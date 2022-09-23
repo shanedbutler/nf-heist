@@ -7,9 +7,9 @@ namespace heist
         public decimal Courage {get; set;}
         public void PrintInfo()
         {
-            Console.WriteLine($"-~-~-{Name}-~-~-");
+            Console.WriteLine($"\n-~-~-{Name}-~-~-");
             Console.WriteLine($"Skill Level: {Skill}");
-            Console.WriteLine($"Courage Factor: {Courage}");
+            Console.WriteLine($"Courage Factor: {Courage}\n");
         }
     }
 }

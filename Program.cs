@@ -8,8 +8,15 @@ namespace heist
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Plan Your Heist!/n");
-            createTeammate();
+            Console.WriteLine("\nPlan Your Heist!\n");
+            bool keepCreating = true;
+
+            while (keepCreating == true)
+            {
+                createTeammate();
+                Console.WriteLine("Add another?");
+                keepCreating = ask();
+            }
         }
         public static void createTeammate()
         {
@@ -19,7 +26,7 @@ namespace heist
             MateOne.Name = Console.ReadLine();
             Console.Write("Skill level: ");
             string skillInput = Console.ReadLine();
-            try
+            try // Parse skill input and set to class
             {
                 MateOne.Skill = int.Parse(skillInput);
             }
@@ -36,7 +43,7 @@ namespace heist
             }
             Console.Write("Courage factor: ");
             string courageInput = Console.ReadLine();
-            try
+            try //Parse courage input and set to class
             {
                 decimal parsed = decimal.Parse(courageInput);
                 MateOne.Courage = parsed / 10;
@@ -52,8 +59,28 @@ namespace heist
                     Console.WriteLine($"\"{courageInput}\" is not a valid entry");
                 }
             }
+            
             MateOne.PrintInfo();
         }
+        public static bool ask()
+        {
+            Console.WriteLine("Y or N?");
+            string input = Console.ReadLine();
+            input.ToLower();
 
+            if (input == "n" || input == "no")
+            {
+                return false;
+            }
+            if (input == "y" || input == "yes")
+            {
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("Invalid response");
+                return ask();
+            }
+        }
     }
 }
