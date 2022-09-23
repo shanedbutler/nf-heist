@@ -9,30 +9,47 @@ namespace heist
         static void Main(string[] args)
         {
             Console.WriteLine("\nPlan Your Heist!\n");
+            Console.Write("Team Name: ");
+            string teamName = Console.ReadLine();
+
+            Team myTeam = new Team(teamName);
+
             bool keepCreating = true;
 
             while (keepCreating == true)
             {
-                createTeammate();
+                Teammate mate = createTeammate();
+                myTeam.AddMate(mate);
+
                 Console.WriteLine("Add another?");
                 keepCreating = ask();
             }
-        }
-        public static void createTeammate()
-        {
-            Teammate MateOne = new Teammate();
-            Console.WriteLine("Create a teammate!");
-            Console.Write("Name: ");
-            MateOne.Name = Console.ReadLine();
-            Console.Write("Skill level: ");
-            string skillInput = Console.ReadLine();
-            try // Parse skill input and set to class
+
+            Console.WriteLine($"\nCurrent *{myTeam.Name}* team line-up:");
+            foreach (Teammate mate in myTeam.Mates)
             {
-                MateOne.Skill = int.Parse(skillInput);
+                mate.PrintInfo();
             }
-            catch (System.Exception)
+        }
+
+        public static Teammate createTeammate()
+        {
+            Console.WriteLine("\nCreate a teammate!");
+            Console.Write("Name: ");
+            string nameInput = Console.ReadLine();
+
+            int skill;
+            while (true)
             {
-                if (skillInput == "")
+                Console.Write("Skill level: ");
+                string skillInput = Console.ReadLine();
+                bool skillSuccess = int.TryParse(skillInput, out int parsedSkill);
+                if (skillSuccess)
+                {
+                    skill = parsedSkill;
+                    break;
+                }
+                else if (skillInput == "")
                 {
                     Console.WriteLine("You forgot to enter a number!");
                 }
@@ -41,16 +58,20 @@ namespace heist
                     Console.WriteLine($"\"{skillInput}\" is not a valid entry");
                 }
             }
-            Console.Write("Courage factor: ");
-            string courageInput = Console.ReadLine();
-            try //Parse courage input and set to class
+
+            decimal courage; 
+            while (true)
             {
-                decimal parsed = decimal.Parse(courageInput);
-                MateOne.Courage = parsed / 10;
-            }
-            catch (System.Exception)
-            {
-                if (courageInput == "")
+                Console.Write("Courage factor: ");
+                string courageInput = Console.ReadLine();
+                bool courageSuccess = decimal.TryParse(courageInput, out decimal parsedCourage);
+
+                if (courageSuccess)
+                {
+                    courage = parsedCourage;
+                    break;
+                }
+                else if (courageInput == "")
                 {
                     Console.WriteLine("You forgot to enter a number!");
                 }
@@ -59,9 +80,12 @@ namespace heist
                     Console.WriteLine($"\"{courageInput}\" is not a valid entry");
                 }
             }
-            
-            MateOne.PrintInfo();
+
+            Teammate mate = new Teammate (nameInput, skill, courage);
+            return mate;
+
         }
+
         public static bool ask()
         {
             Console.WriteLine("Y or N?");
