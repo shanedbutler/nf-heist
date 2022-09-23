@@ -2,9 +2,17 @@ namespace heist
 {
     public class Teammate
     {
-        public string Name {get; set;}
-        public int Skill {get; set;}
-        public decimal Courage {get; set;}
+        public string Name {get;}
+        public int Skill {get;}
+        public decimal Courage {get;}
+
+        public Teammate(string name, int skill, decimal courage)
+        {
+            this.Name = name;
+            this.Skill = skill;
+            this.Courage = courage;
+            PrintInfo();
+        }
         public void PrintInfo()
         {
             Console.WriteLine($"\n-~-~-{Name}-~-~-");
