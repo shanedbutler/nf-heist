@@ -38,13 +38,17 @@ namespace heist
             myTeam.SkillTotal = myTeam.Mates.Sum(m => m.Skill);
 
             int trialRuns = askIterations();
-
+            int successCount = 0;
             for (int i = 0; i < trialRuns; i++)
             {
+                bool wasSuccess = robBank(myTeam, theBank);
+                if (wasSuccess)
                 {
-                    robBank(myTeam, theBank);
+                    successCount++;
                 }
             }
+            Console.WriteLine($"\nYour heist succeeded {successCount} times.");
+            Console.WriteLine($"However, you failed {trialRuns - successCount} times.");
         }
 
         public static Bank createBank()
@@ -150,19 +154,24 @@ namespace heist
             return trials;
         }
 
-        public static void robBank(Team myTeam, Bank theBank)
+        public static bool robBank(Team myTeam, Bank theBank)
         {
             Console.WriteLine($"\nTotal skill level for team is {myTeam.SkillTotal}");
-            Console.WriteLine($"Difficulty level for the bank is {theBank.Difficulty}");
             Console.WriteLine($"Your current luck factor results in {myTeam.Luck} to the banks difficulty");
+            Console.WriteLine($"The resulting difficulty level is {theBank.Difficulty + myTeam.Luck}");
+
+            bool success;
             if (myTeam.SkillTotal > (theBank.Difficulty + myTeam.Luck))
             {
-                Console.WriteLine("The heist succeeds! You made money, but now the FBI is after you.");
+                Console.WriteLine("\nThe heist succeeds! You made money, but now the FBI is after you.");
+                success = true;
             }
             else
             {
                 Console.WriteLine("The heist has failed. You and your team have been captured.");
+                success = false;
             }
+            return success;
         }
 
         public static bool ask()
