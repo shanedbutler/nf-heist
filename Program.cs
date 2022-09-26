@@ -48,7 +48,7 @@ namespace heist
                 }
             }
             Console.WriteLine($"\nYour heist succeeded {successCount} times.");
-            Console.WriteLine($"However, you failed {trialRuns - successCount} times.");
+            Console.WriteLine($"You failed {trialRuns - successCount} times.");
         }
 
         public static Bank createBank()
@@ -107,11 +107,11 @@ namespace heist
             decimal courage;
             while (true)
             {
-                Console.Write("Courage factor: ");
+                Console.Write("Courage factor (.0 - 2.0): ");
                 string courageInput = Console.ReadLine();
                 bool courageSuccess = decimal.TryParse(courageInput, out decimal parsedCourage);
 
-                if (courageSuccess)
+                if (courageSuccess && parsedCourage >= 0 && parsedCourage <= 2)
                 {
                     courage = parsedCourage;
                     break;
