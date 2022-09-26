@@ -8,8 +8,12 @@ namespace heist
     {
         static void Main(string[] args)
         {
+
             Console.WriteLine("\nPlan Your Heist!\n");
-            Console.Write("Team Name: ");
+
+            Bank theBank = createBank();
+
+            Console.Write("\nTeam Name: ");
             string teamName = Console.ReadLine();
 
             Team myTeam = new Team(teamName);
@@ -31,16 +35,42 @@ namespace heist
                 mate.PrintInfo();
             }
 
-            Bank theBank = new Bank();
             myTeam.SkillTotal = myTeam.Mates.Sum(m => m.Skill);
 
-            bool keepRobbing = true;
-            while (keepRobbing == true)
+            int trialRuns = askTrialIterations();
+
+            for (int i = 0; i < trialRuns; i++)
             {
-                robBank(myTeam, theBank);
-                Console.WriteLine("\nMake another attempt?");
-                keepRobbing = ask();
+                {
+                    robBank(myTeam, theBank);
+                }
             }
+        }
+
+        public static Bank createBank()
+        {
+            int difficulty;
+            while (true)
+            {
+                Console.Write("Bank difficulty level: ");
+                string difficultyInput = Console.ReadLine();
+                bool difficultySuccess = int.TryParse(difficultyInput, out int parsedDifficulty);
+                if (difficultySuccess)
+                {
+                    difficulty = parsedDifficulty;
+                    break;
+                }
+                else if (difficultyInput == "")
+                {
+                    Console.WriteLine("You forgot to enter a number!");
+                }
+                else
+                {
+                    Console.WriteLine($"\"{difficultyInput}\" is not a valid entry");
+                }
+            }
+            Bank theBank = new Bank(difficulty);
+            return theBank;
         }
 
         public static Teammate createTeammate()
@@ -91,15 +121,40 @@ namespace heist
                     Console.WriteLine($"\"{courageInput}\" is not a valid entry");
                 }
             }
-
             Teammate mate = new Teammate(nameInput, skill, courage);
             return mate;
+        }
+
+        public static int askTrialIterations()
+        {
+            int trials;
+            while (true)
+            {
+                Console.Write("How Many Trial Runs?: ");
+                string trialsInput = Console.ReadLine();
+                bool trialsSuccess = int.TryParse(trialsInput, out int parsedTrials);
+                if (trialsSuccess)
+                {
+                    trials = parsedTrials;
+                    break;
+                }
+                else if (trialsInput == "")
+                {
+                    Console.WriteLine("You forgot to enter a number!");
+                }
+                else
+                {
+                    Console.WriteLine($"\"{trialsInput}\" is not a valid entry");
+                }
+            }
+            return trials;
         }
 
         public static void robBank(Team myTeam, Bank theBank)
         {
             Console.WriteLine($"\nTotal skill level for team is {myTeam.SkillTotal}");
             Console.WriteLine($"Difficulty level for the bank is {theBank.Difficulty}");
+            Console.WriteLine($"Your teams luck factor adds {myTeam.Luck} to your level");
             if (myTeam.SkillTotal > (theBank.Difficulty + myTeam.Luck))
             {
                 Console.WriteLine("The heist succeeds. You made money, but now the FBI is after you");

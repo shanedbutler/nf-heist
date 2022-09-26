@@ -2,7 +2,10 @@ namespace heist
 {
     class Bank
     {
-        public int Difficulty {get; set;} = 100;
-
+        public int Difficulty {get; set;}
+        public Bank(int userDifficulty)
+        {
+            this.Difficulty = userDifficulty;
+        }
     }
 }
