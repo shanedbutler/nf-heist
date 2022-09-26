@@ -37,7 +37,7 @@ namespace heist
 
             myTeam.SkillTotal = myTeam.Mates.Sum(m => m.Skill);
 
-            int trialRuns = askTrialIterations();
+            int trialRuns = askIterations();
 
             for (int i = 0; i < trialRuns; i++)
             {
@@ -125,7 +125,7 @@ namespace heist
             return mate;
         }
 
-        public static int askTrialIterations()
+        public static int askIterations()
         {
             int trials;
             while (true)
@@ -154,10 +154,10 @@ namespace heist
         {
             Console.WriteLine($"\nTotal skill level for team is {myTeam.SkillTotal}");
             Console.WriteLine($"Difficulty level for the bank is {theBank.Difficulty}");
-            Console.WriteLine($"Your teams luck factor adds {myTeam.Luck} to your level");
+            Console.WriteLine($"Your current luck factor results in {myTeam.Luck} to the banks difficulty");
             if (myTeam.SkillTotal > (theBank.Difficulty + myTeam.Luck))
             {
-                Console.WriteLine("The heist succeeds. You made money, but now the FBI is after you");
+                Console.WriteLine("The heist succeeds! You made money, but now the FBI is after you.");
             }
             else
             {
