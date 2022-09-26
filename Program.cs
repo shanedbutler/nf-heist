@@ -15,7 +15,6 @@ namespace heist
             Team myTeam = new Team(teamName);
 
             bool keepCreating = true;
-
             while (keepCreating == true)
             {
                 Teammate mate = createTeammate();
@@ -30,6 +29,17 @@ namespace heist
             foreach (Teammate mate in myTeam.Mates)
             {
                 mate.PrintInfo();
+            }
+
+            Bank theBank = new Bank();
+            myTeam.SkillTotal = myTeam.Mates.Sum(m => m.Skill);
+
+            bool keepRobbing = true;
+            while (keepRobbing == true)
+            {
+                robBank(myTeam, theBank);
+                Console.WriteLine("\nMake another attempt?");
+                keepRobbing = ask();
             }
         }
 
@@ -60,7 +70,7 @@ namespace heist
                 }
             }
 
-            decimal courage; 
+            decimal courage;
             while (true)
             {
                 Console.Write("Courage factor: ");
@@ -82,8 +92,22 @@ namespace heist
                 }
             }
 
-            Teammate mate = new Teammate (nameInput, skill, courage);
+            Teammate mate = new Teammate(nameInput, skill, courage);
             return mate;
+        }
+
+        public static void robBank(Team myTeam, Bank theBank)
+        {
+            Console.WriteLine($"\nTotal skill level for team is {myTeam.SkillTotal}");
+            Console.WriteLine($"Difficulty level for the bank is {theBank.Difficulty}");
+            if (myTeam.SkillTotal > (theBank.Difficulty + myTeam.Luck))
+            {
+                Console.WriteLine("The heist succeeds. You made money, but now the FBI is after you");
+            }
+            else
+            {
+                Console.WriteLine("The heist has failed. You and your team have been captured.");
+            }
         }
 
         public static bool ask()
