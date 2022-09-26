@@ -17,7 +17,7 @@ namespace heist
         {
             Console.WriteLine($"\n-~-~-{Name}-~-~-");
             Console.WriteLine($"Skill Level: {Skill}");
-            Console.WriteLine($"Courage Factor: {Courage}\n");
+            Console.WriteLine($"Courage Factor: {Courage}");
         }
     }
 }

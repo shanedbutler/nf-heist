@@ -21,11 +21,12 @@ namespace heist
                 Teammate mate = createTeammate();
                 myTeam.AddMate(mate);
 
-                Console.WriteLine("Add another?");
+                Console.WriteLine("\nAdd another?");
                 keepCreating = ask();
             }
 
-            Console.WriteLine($"\nCurrent *{myTeam.Name}* team line-up:");
+            Console.WriteLine($"\nCurrent {myTeam.Name} line-up");
+            Console.WriteLine($"{myTeam.Mates.Count} teammates: ");
             foreach (Teammate mate in myTeam.Mates)
             {
                 mate.PrintInfo();
@@ -83,14 +84,12 @@ namespace heist
 
             Teammate mate = new Teammate (nameInput, skill, courage);
             return mate;
-
         }
 
         public static bool ask()
         {
             Console.WriteLine("Y or N?");
-            string input = Console.ReadLine();
-            input.ToLower();
+            string input = Console.ReadLine().ToLower();
 
             if (input == "n" || input == "no")
             {
