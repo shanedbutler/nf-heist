@@ -67,6 +67,7 @@ namespace heist
                 else if (difficultyInput == "")
                 {
                     Console.WriteLine("You forgot to enter a number!");
+                    continue;
                 }
                 else
                 {
@@ -97,6 +98,7 @@ namespace heist
                 else if (skillInput == "")
                 {
                     Console.WriteLine("You forgot to enter a number!");
+                    continue;
                 }
                 else
                 {
@@ -119,6 +121,7 @@ namespace heist
                 else if (courageInput == "")
                 {
                     Console.WriteLine("You forgot to enter a number!");
+                    continue;
                 }
                 else
                 {
@@ -145,6 +148,7 @@ namespace heist
                 else if (trialsInput == "")
                 {
                     Console.WriteLine("You forgot to enter a number!");
+                    continue;
                 }
                 else
                 {
