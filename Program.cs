@@ -11,10 +11,20 @@ namespace heist
 
             Console.WriteLine("\nPlan Your Heist!\n");
 
+            // Instantiate the bank and set difficulty via method
             Bank theBank = createBank();
 
             Console.Write("\nTeam Name: ");
             string teamName = Console.ReadLine();
+
+            // Create a directory of robbers for the user to choose from
+            List<IRobber> rolodex = getRobberRoster();
+
+            Console.WriteLine("\nCurrent Specialists:");
+            foreach (IRobber r in rolodex)
+            {
+                Console.WriteLine($"- {r.Name}");
+            }
 
             Team myTeam = new Team(teamName);
 
@@ -47,7 +57,15 @@ namespace heist
                     successCount++;
                 }
             }
-            Console.WriteLine($"\nYour heist succeeded {successCount} times.");
+            if (successCount > (trialRuns / 2))
+            {
+                Console.WriteLine("\nCongratulations!");
+            }
+            else
+            {
+                Console.WriteLine("\nSorry!");
+            }
+            Console.WriteLine($"Your heist succeeded {successCount} times.");
             Console.WriteLine($"You failed {trialRuns - successCount} times.");
         }
 
@@ -78,11 +96,64 @@ namespace heist
             return theBank;
         }
 
+        public static List<IRobber> getRobberRoster()
+        {
+            // Create a directory of robbers for the user to choose from
+            List<IRobber> rolodex = new List<IRobber>();
+            Hacker netHacker = new Hacker(".NET Hacker", 40, 35);
+            rolodex.Add(netHacker);
+            
+            Hacker iotHacker = new Hacker("IoT Hacker", 30, 30);
+            rolodex.Add(iotHacker);
+
+            Muscle fitnessCoach = new Muscle("Fitness Coach", 25, 30);
+            rolodex.Add(fitnessCoach);
+
+            Muscle gymRat = new Muscle("Gym Rat", 45, 35);
+            rolodex.Add(gymRat);
+
+            Locksmith lockSmith = new Locksmith("Locksmith", 35, 25);
+            rolodex.Add(lockSmith);
+
+            Locksmith safeCracker = new Locksmith("Safecracker", 60, 50);
+            rolodex.Add(safeCracker);
+
+            return rolodex
+        }
+
         public static Teammate createTeammate()
         {
             Console.WriteLine("\nCreate a teammate!");
             Console.Write("Name: ");
             string nameInput = Console.ReadLine();
+
+            int specialtyNum;
+            while (true)
+            {
+                Console.WriteLine("Specialist Options:");
+                Console.WriteLine(" 1. Hacker");
+                Console.WriteLine(" 2. Muscle");
+                Console.WriteLine(" 3. Locksmith");
+                Console.WriteLine("Specialty Number: ");
+                string specialtyInput = Console.ReadLine();
+                bool specialtySuccess = int.TryParse(specialtyInput, out int parsedSpecialty);
+                if (specialtySuccess && parsedSpecialty > 0 && parsedSpecialty <= 3)
+                {
+                    specialtyNum = parsedSpecialty;
+                    break;
+                }
+                else if (specialtyInput == "")
+                {
+                    Console.WriteLine("You forgot to enter a number!");
+                    continue;
+                }
+                else
+                {
+                    Console.WriteLine($"\"{specialtyInput}\" is not a valid entry");
+                }
+            }
+
+            string specialty = findSpecialty(specialtyNum);
 
             int skill;
             while (true)
@@ -103,6 +174,28 @@ namespace heist
                 else
                 {
                     Console.WriteLine($"\"{skillInput}\" is not a valid entry");
+                }
+            }
+
+            int take;
+            while (true)
+            {
+                Console.Write("Take percentage: ");
+                string takeInput = Console.ReadLine();
+                bool takeSuccess = int.TryParse(takeInput, out int parsedTake);
+                if (takeSuccess && parsedTake > 0 && parsedTake <= 100)
+                {
+                    take = parsedTake;
+                    break;
+                }
+                else if (takeInput == "")
+                {
+                    Console.WriteLine("You forgot to enter a number!");
+                    continue;
+                }
+                else
+                {
+                    Console.WriteLine($"\"{takeInput}\" is not a valid entry");
                 }
             }
 
@@ -128,7 +221,7 @@ namespace heist
                     Console.WriteLine($"\"{courageInput}\" is not a valid entry");
                 }
             }
-            Teammate mate = new Teammate(nameInput, skill, courage);
+            Teammate mate = new Teammate(nameInput, specialty, skill, courage);
             return mate;
         }
 
@@ -172,7 +265,7 @@ namespace heist
             }
             else
             {
-                Console.WriteLine("The heist has failed. You and your team have been captured.");
+                Console.WriteLine("\nThe heist has failed. You and your team have been captured.");
                 success = false;
             }
             return success;
@@ -195,6 +288,22 @@ namespace heist
             {
                 Console.WriteLine("Invalid response");
                 return ask();
+            }
+        }
+
+        // Method to return user inputted specialty number as it's name string
+        public static string findSpecialty(int num)
+        {
+            switch (num)
+            {
+                case 1:
+                    return "Hacker";
+                case 2:
+                    return "Muscle";
+                case 3:
+                    return "Locksmith";
+                default:
+                    return "Error";
             }
         }
     }
