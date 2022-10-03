@@ -6,7 +6,7 @@ namespace heist
         string Specialty { get; set; }
         int SkillLevel { get; set; }
         int PercentageCut { get; set; }
-        void PrintInfo ();
+        void PrintInfo();
         void PerformSkill(Bank bank);
     }
     public class Specialist : IRobber
