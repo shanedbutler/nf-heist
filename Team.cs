@@ -7,9 +7,9 @@ namespace heist
         {
             this.Name = name;
         }
-        public List<Teammate> Mates = new List<Teammate>();
+        public List<IRobber> Mates = new List<IRobber>();
 
-        public void AddMate(Teammate mate)
+        public void AddMate(IRobber mate)
         {
             this.Mates.Add(mate);
         }
