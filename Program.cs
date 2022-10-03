@@ -15,12 +15,12 @@ namespace heist
             Bank theBank = createBank();
             theBank.printReport();
 
-            // Create a directory of robbers for the user to choose from
-            List<IRobber> rolodex = getPremadeRoster();
+            Rolodex rolodex = new Rolodex();
+            // Return a list of robbers for the user to choose from
+            rolodex.List = getPremadeRoster();
 
             Console.WriteLine("Specialist rolodex:\n");
-            printRoster(rolodex);
-
+            printRoster(rolodex.List);
 
             while (true)
             {
@@ -33,7 +33,7 @@ namespace heist
                 }
 
                 Specialist mate = createSpecialist();
-                rolodex.Add(mate);
+                rolodex.List.Add(mate);
             }
 
             Console.WriteLine("\nBuild Your Crew!");
@@ -43,25 +43,23 @@ namespace heist
 
             while (true)
             {
-                Console.WriteLine("\nAdd specialist to crew?");
+                crew.PrintInfo();
+                Console.WriteLine("Add specialist to crew?");
                 bool keepAdding = ask();
                 if (keepAdding == false)
                 {
                     break;
                 }
 
-                IRobber crewMate = selectSpecialist(rolodex);
-                crew.AddMate(crewMate);
-            }
+                IRobber crewMate = selectRobber(rolodex.List, crew);
+                crew.AddMate(crewMate, rolodex.List);
 
-            Console.WriteLine($"\nCurrent {crew.Name} line-up");
-            Console.WriteLine($"{crew.Mates.Count} crewmates:\n");
-            foreach (Specialist mate in crew.Mates)
-            {
-                mate.PrintInfo();
+                if (crew.PercentageTotal + rolodex.Cheapest() > 100)
+                {
+                    Console.WriteLine("\nYou've reached your budget for specialists!");
+                    break;
+                }
             }
-
-            crew.SkillTotal = crew.Mates.Sum(m => m.SkillLevel);
 
             int trialRuns = askIterations();
             int successCount = 0;
@@ -112,30 +110,31 @@ namespace heist
             return theBank;
         }
 
+        // Create a directory of robbers for the user to choose from
         public static List<IRobber> getPremadeRoster()
         {
-            // Create a directory of robbers for the user to choose from
-            List<IRobber> rolodex = new List<IRobber>();
+            List<IRobber> preList = new List<IRobber>();
             Hacker netHacker = new Hacker(".NET Developer", "Hacker", 40, 35);
-            rolodex.Add(netHacker);
+            preList.Add(netHacker);
 
             Hacker iotHacker = new Hacker("IoT Wizard", "Hacker", 30, 30);
-            rolodex.Add(iotHacker);
+            preList.Add(iotHacker);
 
             Muscle fitnessCoach = new Muscle("Fitness Coach", "Muscle", 25, 30);
-            rolodex.Add(fitnessCoach);
+            preList.Add(fitnessCoach);
 
             Muscle gymRat = new Muscle("Gym Rat", "Muscle", 45, 35);
-            rolodex.Add(gymRat);
+            preList.Add(gymRat);
 
             Locksmith lockSmith = new Locksmith("Mobile Locksmith", "Locksmith", 35, 25);
-            rolodex.Add(lockSmith);
+            preList.Add(lockSmith);
 
             Locksmith safeCracker = new Locksmith("Safecracker", "Locksmith", 60, 50);
-            rolodex.Add(safeCracker);
+            preList.Add(safeCracker);
 
-            return rolodex;
+            return preList;
         }
+
         public static void printRoster(List<IRobber> robberList)
         {
             foreach (IRobber r in robberList)
@@ -241,18 +240,23 @@ namespace heist
                     return new Specialist(name, "No Specialty", skill, take);
             }
         }
-        public static IRobber selectSpecialist(List<IRobber> rolodex)
+
+        //Method to return a robber by user selection
+        public static IRobber selectRobber(List<IRobber> rolodex, Team crew)
         {
-            printRoster(rolodex);
+            List<IRobber> availableRobbers = (from r in rolodex
+                                              where r.PercentageCut + crew.PercentageTotal < 100
+                                              select r).ToList();
+            printRoster(availableRobbers);
             int selectionNum;
             while (true)
             {
-                Console.WriteLine("Enter number of specialist to add: ");
+                Console.WriteLine("Enter ID number of specialist to add: ");
                 string selectionInput = Console.ReadLine();
                 bool selectionSuccess = int.TryParse(selectionInput, out int parsedSelection);
-                if (selectionSuccess && parsedSelection > 0 && parsedSelection <= rolodex.Count)
+                if (selectionSuccess && parsedSelection > 0 && parsedSelection <= availableRobbers.Count)
                 {
-                    selectionNum = parsedSelection;
+                    selectionNum = parsedSelection - 1;
                     break;
                 }
                 else if (selectionInput == "")
@@ -263,14 +267,19 @@ namespace heist
                 else
                 {
                     Console.WriteLine($"\"{selectionInput}\" is not a valid entry");
-                    Console.WriteLine($"Enter a number between 1 and {rolodex.Count}");
+                    Console.WriteLine($"Enter a number between 1 and {availableRobbers.Count}");
                 }
             }
 
             IRobber crewMate = rolodex[selectionNum];
             return crewMate;
         }
-        
+
+        public int cheapestRobber(List<IRobber> robbers)
+        {
+            return robbers.Min(m => m.PercentageCut);
+        }
+
         public static int askIterations()
         {
             int trials;
