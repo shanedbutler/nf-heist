@@ -13,45 +13,61 @@ namespace heist
 
             // Instantiate the bank and set difficulty via method
             Bank theBank = createBank();
-
-            Console.Write("\nTeam Name: ");
-            string teamName = Console.ReadLine();
+            theBank.printReport();
 
             // Create a directory of robbers for the user to choose from
-            List<IRobber> rolodex = getRobberRoster();
+            List<IRobber> rolodex = getPremadeRoster();
 
-            Console.WriteLine("\nCurrent Specialists:");
-            foreach (IRobber r in rolodex)
+            Console.WriteLine("Specialist rolodex:\n");
+            printRoster(rolodex);
+
+
+            while (true)
             {
-                Console.WriteLine($"- {r.Name}");
+                Console.WriteLine("Add specialist to rolodex?");
+                bool keepCreating = ask();
+
+                if (keepCreating == false)
+                {
+                    break;
+                }
+
+                Specialist mate = createSpecialist();
+                rolodex.Add(mate);
             }
 
-            Team myTeam = new Team(teamName);
+            Console.WriteLine("\nBuild Your Crew!");
+            Console.Write("Crew Name: ");
+            string crewName = Console.ReadLine();
+            Team crew = new Team(crewName);
 
-            bool keepCreating = true;
-            while (keepCreating == true)
+            while (true)
             {
-                Teammate mate = createTeammate();
-                myTeam.AddMate(mate);
+                Console.WriteLine("\nAdd specialist to crew?");
+                bool keepAdding = ask();
+                if (keepAdding == false)
+                {
+                    break;
+                }
 
-                Console.WriteLine("\nAdd another?");
-                keepCreating = ask();
+                IRobber crewMate = selectSpecialist(rolodex);
+                crew.AddMate(crewMate);
             }
 
-            Console.WriteLine($"\nCurrent {myTeam.Name} line-up");
-            Console.WriteLine($"{myTeam.Mates.Count} teammates: ");
-            foreach (Teammate mate in myTeam.Mates)
+            Console.WriteLine($"\nCurrent {crew.Name} line-up");
+            Console.WriteLine($"{crew.Mates.Count} crewmates:\n");
+            foreach (Specialist mate in crew.Mates)
             {
                 mate.PrintInfo();
             }
 
-            myTeam.SkillTotal = myTeam.Mates.Sum(m => m.Skill);
+            crew.SkillTotal = crew.Mates.Sum(m => m.SkillLevel);
 
             int trialRuns = askIterations();
             int successCount = 0;
             for (int i = 0; i < trialRuns; i++)
             {
-                bool wasSuccess = robBank(myTeam, theBank);
+                bool wasSuccess = robBank(crew, theBank);
                 if (wasSuccess)
                 {
                     successCount++;
@@ -96,34 +112,41 @@ namespace heist
             return theBank;
         }
 
-        public static List<IRobber> getRobberRoster()
+        public static List<IRobber> getPremadeRoster()
         {
             // Create a directory of robbers for the user to choose from
             List<IRobber> rolodex = new List<IRobber>();
-            Hacker netHacker = new Hacker(".NET Hacker", 40, 35);
+            Hacker netHacker = new Hacker(".NET Developer", "Hacker", 40, 35);
             rolodex.Add(netHacker);
-            
-            Hacker iotHacker = new Hacker("IoT Hacker", 30, 30);
+
+            Hacker iotHacker = new Hacker("IoT Wizard", "Hacker", 30, 30);
             rolodex.Add(iotHacker);
 
-            Muscle fitnessCoach = new Muscle("Fitness Coach", 25, 30);
+            Muscle fitnessCoach = new Muscle("Fitness Coach", "Muscle", 25, 30);
             rolodex.Add(fitnessCoach);
 
-            Muscle gymRat = new Muscle("Gym Rat", 45, 35);
+            Muscle gymRat = new Muscle("Gym Rat", "Muscle", 45, 35);
             rolodex.Add(gymRat);
 
-            Locksmith lockSmith = new Locksmith("Locksmith", 35, 25);
+            Locksmith lockSmith = new Locksmith("Mobile Locksmith", "Locksmith", 35, 25);
             rolodex.Add(lockSmith);
 
-            Locksmith safeCracker = new Locksmith("Safecracker", 60, 50);
+            Locksmith safeCracker = new Locksmith("Safecracker", "Locksmith", 60, 50);
             rolodex.Add(safeCracker);
 
-            return rolodex
+            return rolodex;
         }
-
-        public static Teammate createTeammate()
+        public static void printRoster(List<IRobber> robberList)
         {
-            Console.WriteLine("\nCreate a teammate!");
+            foreach (IRobber r in robberList)
+            {
+                Console.Write($"{robberList.IndexOf(r) + 1}: ");
+                r.PrintInfo();
+            }
+        }
+        public static Specialist createSpecialist()
+        {
+            Console.WriteLine("\nCreate a specialist!");
             Console.Write("Name: ");
             string nameInput = Console.ReadLine();
 
@@ -153,8 +176,6 @@ namespace heist
                 }
             }
 
-            string specialty = findSpecialty(specialtyNum);
-
             int skill;
             while (true)
             {
@@ -182,6 +203,7 @@ namespace heist
             {
                 Console.Write("Take percentage: ");
                 string takeInput = Console.ReadLine();
+                Console.WriteLine("");
                 bool takeSuccess = int.TryParse(takeInput, out int parsedTake);
                 if (takeSuccess && parsedTake > 0 && parsedTake <= 100)
                 {
@@ -199,32 +221,56 @@ namespace heist
                 }
             }
 
-            decimal courage;
+            Specialist mate = newSpecialist(specialtyNum, nameInput, skill, take);
+
+            return mate;
+        }
+
+        // Method to return user inputted specialty number as it's name string and return specialist
+        public static Specialist newSpecialist(int specialtyNum, string name, int skill, int take)
+        {
+            switch (specialtyNum)
+            {
+                case 1:
+                    return new Hacker(name, "Hacker", skill, take);
+                case 2:
+                    return new Muscle(name, "Muscle", skill, take);
+                case 3:
+                    return new Locksmith(name, "Locksmith", skill, take);
+                default:
+                    return new Specialist(name, "No Specialty", skill, take);
+            }
+        }
+        public static IRobber selectSpecialist(List<IRobber> rolodex)
+        {
+            printRoster(rolodex);
+            int selectionNum;
             while (true)
             {
-                Console.Write("Courage factor (.0 - 2.0): ");
-                string courageInput = Console.ReadLine();
-                bool courageSuccess = decimal.TryParse(courageInput, out decimal parsedCourage);
-
-                if (courageSuccess && parsedCourage >= 0 && parsedCourage <= 2)
+                Console.WriteLine("Enter number of specialist to add: ");
+                string selectionInput = Console.ReadLine();
+                bool selectionSuccess = int.TryParse(selectionInput, out int parsedSelection);
+                if (selectionSuccess && parsedSelection > 0 && parsedSelection <= rolodex.Count)
                 {
-                    courage = parsedCourage;
+                    selectionNum = parsedSelection;
                     break;
                 }
-                else if (courageInput == "")
+                else if (selectionInput == "")
                 {
                     Console.WriteLine("You forgot to enter a number!");
                     continue;
                 }
                 else
                 {
-                    Console.WriteLine($"\"{courageInput}\" is not a valid entry");
+                    Console.WriteLine($"\"{selectionInput}\" is not a valid entry");
+                    Console.WriteLine($"Enter a number between 1 and {rolodex.Count}");
                 }
             }
-            Teammate mate = new Teammate(nameInput, specialty, skill, courage);
-            return mate;
-        }
 
+            IRobber crewMate = rolodex[selectionNum];
+            return crewMate;
+        }
+        
         public static int askIterations()
         {
             int trials;
@@ -251,14 +297,14 @@ namespace heist
             return trials;
         }
 
-        public static bool robBank(Team myTeam, Bank theBank)
+        public static bool robBank(Team crew, Bank theBank)
         {
-            Console.WriteLine($"\nTotal skill level for team is {myTeam.SkillTotal}");
-            Console.WriteLine($"Your current luck factor results in {myTeam.Luck} to the banks difficulty");
-            Console.WriteLine($"The resulting difficulty level is {theBank.Difficulty + myTeam.Luck}");
+            Console.WriteLine($"\nTotal skill level for team is {crew.SkillTotal}");
+            Console.WriteLine($"Your current luck factor results in {crew.Luck} to the banks difficulty");
+            Console.WriteLine($"The resulting difficulty level is {theBank.Difficulty + crew.Luck}");
 
             bool success;
-            if (myTeam.SkillTotal > (theBank.Difficulty + myTeam.Luck))
+            if (crew.SkillTotal > (theBank.Difficulty + crew.Luck))
             {
                 Console.WriteLine("\nThe heist succeeds! You made money, but now the FBI is after you.");
                 success = true;
@@ -288,22 +334,6 @@ namespace heist
             {
                 Console.WriteLine("Invalid response");
                 return ask();
-            }
-        }
-
-        // Method to return user inputted specialty number as it's name string
-        public static string findSpecialty(int num)
-        {
-            switch (num)
-            {
-                case 1:
-                    return "Hacker";
-                case 2:
-                    return "Muscle";
-                case 3:
-                    return "Locksmith";
-                default:
-                    return "Error";
             }
         }
     }
