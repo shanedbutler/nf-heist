@@ -2,7 +2,6 @@ namespace heist
 {
     public class Bank
     {
-        public int Difficulty { get; } 
         public int CashOnHand { get; set; } = new Random().Next(50000, 1000000);
         public int AlarmScore { get; set; } = new Random().Next(0, 100);
         public int VaultScore { get; set; } = new Random().Next(0, 100);
@@ -13,10 +12,6 @@ namespace heist
             {
                 return AlarmScore <= 0 && VaultScore <= 0 && SecurityGuardScore <= 0 ? false : true;
             }
-        }
-        public Bank(int userDifficulty)
-        {
-            this.Difficulty = userDifficulty;
         }
         public void printReport()
         {
@@ -39,8 +34,6 @@ namespace heist
 
             Console.WriteLine($"Most Secure: {mostSecure}");
             Console.WriteLine($"Least Secure: {leastSecure}\n");
-
-
         }
     }
 }
