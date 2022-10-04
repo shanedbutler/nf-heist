@@ -7,7 +7,7 @@ namespace heist
         int SkillLevel { get; set; }
         int PercentageCut { get; set; }
         void PrintInfo();
-        void PerformSkill(Bank bank);
+        bool PerformSkill(Bank bank, int luck);
     }
     public class Specialist : IRobber
     {
@@ -15,9 +15,10 @@ namespace heist
         public string Specialty { get; set; }
         public int SkillLevel { get; set; }
         public int PercentageCut { get; set; }
-        public virtual void PerformSkill(Bank bank)
+        public virtual bool PerformSkill(Bank bank, int luck)
         {
-            Console.WriteLine($"{Name} does their thing! It was cool, but had no target effect!");
+            Console.WriteLine($"{Name} does their thing! It was cool, but had really no effect. A failure!");
+            return false;
         }
         public void PrintInfo()
         {
@@ -36,13 +37,19 @@ namespace heist
     }
     public class Hacker : Specialist
     {
-        public override void PerformSkill(Bank bank)
+        public override bool PerformSkill(Bank bank, int luck)
         {
             Console.WriteLine($"{Name} is infiltrating the mainframe");
-            bank.AlarmScore -= SkillLevel;
+            bank.AlarmScore -= SkillLevel + luck;
             if (bank.SecurityGuardScore < 0)
             {
-                Console.WriteLine($"{Name} has convinced the guards to join their workout. They are completely neutralized!");
+                Console.WriteLine($"{Name} has hacked their system wide open!");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine($"{Name} has been foiled by Azure security services!");
+                return false;
             }
         }
         public Hacker(string name, string specialty, int skill, int percentage) : base(name, specialty, skill, percentage)
@@ -51,13 +58,19 @@ namespace heist
     }
     public class Muscle : Specialist
     {
-        public override void PerformSkill(Bank bank)
+        public override bool PerformSkill(Bank bank, int luck)
         {
             Console.WriteLine($"{Name} is distracting the guards by doing cross-fit in the lobby");
-            bank.SecurityGuardScore -= SkillLevel;
+            bank.SecurityGuardScore -= SkillLevel + luck;
             if (bank.SecurityGuardScore < 0)
             {
                 Console.WriteLine($"{Name} has convinced the guards to join their workout. They are completely neutralized!");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine($"{Name} has miscalculated their appetite for fitness and has been taken out!");
+                return false;
             }
         }
         public Muscle(string name, string specialty, int skill, int percentage) : base(name, specialty, skill, percentage)
@@ -66,13 +79,19 @@ namespace heist
     }
     public class Locksmith : Specialist
     {
-        public override void PerformSkill(Bank bank)
+        public override bool PerformSkill(Bank bank, int luck)
         {
             Console.WriteLine($"{Name} has going to town on the bank vault");
-            bank.VaultScore -= SkillLevel;
+            bank.VaultScore -= SkillLevel + luck;
             if (bank.VaultScore < 0)
             {
                 Console.WriteLine($"{Name} has cracked the vault. The gold bullion ready to go!");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine($"{Name} has tripped the security mechanism and is locked within the vault!");
+                return false;
             }
         }
         public Locksmith(string name, string specialty, int skill, int percentage) : base(name, specialty, skill, percentage)

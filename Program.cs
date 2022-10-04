@@ -11,10 +11,6 @@ namespace heist
 
             Console.WriteLine("\nPlan Your Heist!\n");
 
-            // Instantiate the bank and set difficulty via method
-            Bank theBank = createBank();
-            theBank.printReport();
-
             Rolodex rolodex = new Rolodex();
             // Return a list of robbers for the user to choose from
             rolodex.List = getPremadeRoster();
@@ -36,7 +32,11 @@ namespace heist
                 rolodex.List.Add(mate);
             }
 
-            Console.WriteLine("\nBuild Your Crew!");
+            // Instantiate the bank
+            Bank theBank = new Bank();
+            theBank.printReport();
+
+            Console.WriteLine("Build Your Crew!");
             Console.Write("Crew Name: ");
             string crewName = Console.ReadLine();
             Team crew = new Team(crewName);
@@ -63,73 +63,57 @@ namespace heist
 
             int trialRuns = askIterations();
             int successCount = 0;
+            int personalEarnings = 0;
             for (int i = 0; i < trialRuns; i++)
             {
                 bool wasSuccess = robBank(crew, theBank);
                 if (wasSuccess)
                 {
                     successCount++;
+                    personalEarnings += calculateEarnings(crew, theBank);
+                    Console.WriteLine($"You made {personalEarnings}!");
+                }
+
+                //Reset bank and print report for next iteration on all but last iteration
+                if (i + 1 != trialRuns)
+                {
+                theBank = new Bank();
+                Console.WriteLine("\nNext Bank!");
+                theBank.printReport();
                 }
             }
             if (successCount > (trialRuns / 2))
             {
-                Console.WriteLine("\nCongratulations!");
+                Console.WriteLine("Congratulations!");
             }
             else
             {
-                Console.WriteLine("\nSorry!");
+                Console.WriteLine("Sorry!");
             }
             Console.WriteLine($"Your heist succeeded {successCount} times.");
             Console.WriteLine($"You failed {trialRuns - successCount} times.");
-        }
-
-        public static Bank createBank()
-        {
-            int difficulty;
-            while (true)
-            {
-                Console.Write("Bank difficulty level: ");
-                string difficultyInput = Console.ReadLine();
-                bool difficultySuccess = int.TryParse(difficultyInput, out int parsedDifficulty);
-                if (difficultySuccess)
-                {
-                    difficulty = parsedDifficulty;
-                    break;
-                }
-                else if (difficultyInput == "")
-                {
-                    Console.WriteLine("You forgot to enter a number!");
-                    continue;
-                }
-                else
-                {
-                    Console.WriteLine($"\"{difficultyInput}\" is not a valid entry");
-                }
-            }
-            Bank theBank = new Bank(difficulty);
-            return theBank;
         }
 
         // Create a directory of robbers for the user to choose from
         public static List<IRobber> getPremadeRoster()
         {
             List<IRobber> preList = new List<IRobber>();
-            Hacker netHacker = new Hacker(".NET Developer", "Hacker", 40, 35);
+            Hacker netHacker = new Hacker(".NET Developer", "Hacker", 70, 25);
             preList.Add(netHacker);
 
-            Hacker iotHacker = new Hacker("IoT Wizard", "Hacker", 30, 30);
+            Hacker iotHacker = new Hacker("IoT Wizard", "Hacker", 50, 20);
             preList.Add(iotHacker);
 
-            Muscle fitnessCoach = new Muscle("Fitness Coach", "Muscle", 25, 30);
+            Muscle fitnessCoach = new Muscle("Fitness Coach", "Muscle", 45, 20);
             preList.Add(fitnessCoach);
 
-            Muscle gymRat = new Muscle("Gym Rat", "Muscle", 45, 35);
+            Muscle gymRat = new Muscle("Gym Rat", "Muscle", 70, 25);
             preList.Add(gymRat);
 
-            Locksmith lockSmith = new Locksmith("Mobile Locksmith", "Locksmith", 35, 25);
+            Locksmith lockSmith = new Locksmith("Mobile Locksmith", "Locksmith", 50, 15);
             preList.Add(lockSmith);
 
-            Locksmith safeCracker = new Locksmith("Safecracker", "Locksmith", 60, 50);
+            Locksmith safeCracker = new Locksmith("Safecracker", "Locksmith", 70, 40);
             preList.Add(safeCracker);
 
             return preList;
@@ -241,9 +225,10 @@ namespace heist
             }
         }
 
-        //Method to return a robber by user selection
+        // Method to return a robber by user selection
         public static IRobber selectRobber(List<IRobber> rolodex, Team crew)
         {
+            // Display only the robbers that the user has budget for.
             List<IRobber> availableRobbers = (from r in rolodex
                                               where r.PercentageCut + crew.PercentageTotal < 100
                                               select r).ToList();
@@ -257,7 +242,15 @@ namespace heist
                 if (selectionSuccess && parsedSelection > 0 && parsedSelection <= availableRobbers.Count)
                 {
                     selectionNum = parsedSelection - 1;
-                    break;
+                    if(crew.Mates.Any(m => m.Specialty == rolodex[selectionNum].Specialty))
+                    {
+                        Console.WriteLine($"You already have a {rolodex[selectionNum].Specialty}!");
+                        continue;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
                 else if (selectionInput == "")
                 {
@@ -270,14 +263,7 @@ namespace heist
                     Console.WriteLine($"Enter a number between 1 and {availableRobbers.Count}");
                 }
             }
-
-            IRobber crewMate = rolodex[selectionNum];
-            return crewMate;
-        }
-
-        public int cheapestRobber(List<IRobber> robbers)
-        {
-            return robbers.Min(m => m.PercentageCut);
+            return rolodex[selectionNum];
         }
 
         public static int askIterations()
@@ -308,24 +294,37 @@ namespace heist
 
         public static bool robBank(Team crew, Bank theBank)
         {
-            Console.WriteLine($"\nTotal skill level for team is {crew.SkillTotal}");
-            Console.WriteLine($"Your current luck factor results in {crew.Luck} to the banks difficulty");
-            Console.WriteLine($"The resulting difficulty level is {theBank.Difficulty + crew.Luck}");
+            Console.WriteLine($"Your current luck factor is {crew.Luck}");
+
+            List<bool> systemSuccessList = new List<bool>();
+
+            foreach (IRobber mate in crew.Mates)
+            {
+                systemSuccessList.Add(mate.PerformSkill(theBank, crew.Luck));
+            }
 
             bool success;
-            if (crew.SkillTotal > (theBank.Difficulty + crew.Luck))
+            if (systemSuccessList.Any(success => success == false))
             {
-                Console.WriteLine("\nThe heist succeeds! You made money, but now the FBI is after you.");
-                success = true;
+                Console.WriteLine("The heist has failed. You and your team have been captured.");
+                success = false;
             }
             else
             {
-                Console.WriteLine("\nThe heist has failed. You and your team have been captured.");
-                success = false;
+                Console.WriteLine("The heist succeeds! You made money, but now the FBI is after you.");
+                success = true;
             }
             return success;
         }
-
+        public static int calculateEarnings(Team crew, Bank theBank)
+        {
+            int earningsTotal = theBank.CashOnHand;
+            foreach (var mate in crew.Mates)
+            {
+                earningsTotal =- theBank.CashOnHand * (mate.PercentageCut / 100);
+            }
+            return earningsTotal;
+        }
         public static bool ask()
         {
             Console.WriteLine("Y or N?");
