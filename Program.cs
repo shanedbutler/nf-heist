@@ -11,78 +11,153 @@ namespace heist
 
             Console.WriteLine("\nPlan Your Heist!\n");
 
-            Bank theBank = createBank();
+            Rolodex rolodex = new Rolodex();
+            // Return a list of robbers for the user to choose from
+            rolodex.List = getPremadeRoster();
 
-            Console.Write("\nTeam Name: ");
-            string teamName = Console.ReadLine();
+            Console.WriteLine("Specialist rolodex:\n");
+            printRoster(rolodex.List);
 
-            Team myTeam = new Team(teamName);
-
-            bool keepCreating = true;
-            while (keepCreating == true)
+            while (true)
             {
-                Teammate mate = createTeammate();
-                myTeam.AddMate(mate);
+                Console.WriteLine("Add specialist to rolodex?");
+                bool keepCreating = ask();
 
-                Console.WriteLine("\nAdd another?");
-                keepCreating = ask();
+                if (keepCreating == false)
+                {
+                    break;
+                }
+
+                Specialist mate = createSpecialist();
+                rolodex.List.Add(mate);
             }
 
-            Console.WriteLine($"\nCurrent {myTeam.Name} line-up");
-            Console.WriteLine($"{myTeam.Mates.Count} teammates: ");
-            foreach (Teammate mate in myTeam.Mates)
-            {
-                mate.PrintInfo();
-            }
+            // Instantiate the bank
+            Bank theBank = new Bank();
+            theBank.printReport();
 
-            myTeam.SkillTotal = myTeam.Mates.Sum(m => m.Skill);
+            Console.WriteLine("Build Your Crew!");
+            Console.Write("Crew Name: ");
+            string crewName = Console.ReadLine();
+            Team crew = new Team(crewName);
+
+            while (true)
+            {
+                crew.PrintInfo();
+                Console.WriteLine("Add specialist to crew?");
+                bool keepAdding = ask();
+                if (keepAdding == false)
+                {
+                    break;
+                }
+
+                IRobber crewMate = selectRobber(rolodex.List, crew);
+                crew.AddMate(crewMate, rolodex.List);
+
+                if (crew.PercentageTotal + rolodex.Cheapest() > 100)
+                {
+                    Console.WriteLine("\nYou've reached your budget for specialists!");
+                    break;
+                }
+            }
 
             int trialRuns = askIterations();
             int successCount = 0;
+            int personalEarnings = 0;
             for (int i = 0; i < trialRuns; i++)
             {
-                bool wasSuccess = robBank(myTeam, theBank);
+                bool wasSuccess = robBank(crew, theBank);
                 if (wasSuccess)
                 {
                     successCount++;
+                    personalEarnings += calculateEarnings(crew, theBank);
+                    Console.WriteLine($"You made {personalEarnings}!");
+                }
+
+                //Reset bank and print report for next iteration on all but last iteration
+                if (i + 1 != trialRuns)
+                {
+                theBank = new Bank();
+                Console.WriteLine("\nNext Bank!");
+                theBank.printReport();
                 }
             }
-            Console.WriteLine($"\nYour heist succeeded {successCount} times.");
+            if (successCount > (trialRuns / 2))
+            {
+                Console.WriteLine("Congratulations!");
+            }
+            else
+            {
+                Console.WriteLine("Sorry!");
+            }
+            Console.WriteLine($"Your heist succeeded {successCount} times.");
             Console.WriteLine($"You failed {trialRuns - successCount} times.");
         }
 
-        public static Bank createBank()
+        // Create a directory of robbers for the user to choose from
+        public static List<IRobber> getPremadeRoster()
         {
-            int difficulty;
+            List<IRobber> preList = new List<IRobber>();
+            Hacker netHacker = new Hacker(".NET Developer", "Hacker", 70, 25);
+            preList.Add(netHacker);
+
+            Hacker iotHacker = new Hacker("IoT Wizard", "Hacker", 50, 20);
+            preList.Add(iotHacker);
+
+            Muscle fitnessCoach = new Muscle("Fitness Coach", "Muscle", 45, 20);
+            preList.Add(fitnessCoach);
+
+            Muscle gymRat = new Muscle("Gym Rat", "Muscle", 70, 25);
+            preList.Add(gymRat);
+
+            Locksmith lockSmith = new Locksmith("Mobile Locksmith", "Locksmith", 50, 15);
+            preList.Add(lockSmith);
+
+            Locksmith safeCracker = new Locksmith("Safecracker", "Locksmith", 70, 40);
+            preList.Add(safeCracker);
+
+            return preList;
+        }
+
+        public static void printRoster(List<IRobber> robberList)
+        {
+            foreach (IRobber r in robberList)
+            {
+                Console.Write($"{robberList.IndexOf(r) + 1}: ");
+                r.PrintInfo();
+            }
+        }
+        public static Specialist createSpecialist()
+        {
+            Console.WriteLine("\nCreate a specialist!");
+            Console.Write("Name: ");
+            string nameInput = Console.ReadLine();
+
+            int specialtyNum;
             while (true)
             {
-                Console.Write("Bank difficulty level: ");
-                string difficultyInput = Console.ReadLine();
-                bool difficultySuccess = int.TryParse(difficultyInput, out int parsedDifficulty);
-                if (difficultySuccess)
+                Console.WriteLine("Specialist Options:");
+                Console.WriteLine(" 1. Hacker");
+                Console.WriteLine(" 2. Muscle");
+                Console.WriteLine(" 3. Locksmith");
+                Console.WriteLine("Specialty Number: ");
+                string specialtyInput = Console.ReadLine();
+                bool specialtySuccess = int.TryParse(specialtyInput, out int parsedSpecialty);
+                if (specialtySuccess && parsedSpecialty > 0 && parsedSpecialty <= 3)
                 {
-                    difficulty = parsedDifficulty;
+                    specialtyNum = parsedSpecialty;
                     break;
                 }
-                else if (difficultyInput == "")
+                else if (specialtyInput == "")
                 {
                     Console.WriteLine("You forgot to enter a number!");
                     continue;
                 }
                 else
                 {
-                    Console.WriteLine($"\"{difficultyInput}\" is not a valid entry");
+                    Console.WriteLine($"\"{specialtyInput}\" is not a valid entry");
                 }
             }
-            Bank theBank = new Bank(difficulty);
-            return theBank;
-        }
-
-        public static Teammate createTeammate()
-        {
-            Console.WriteLine("\nCreate a teammate!");
-            Console.Write("Name: ");
-            string nameInput = Console.ReadLine();
 
             int skill;
             while (true)
@@ -106,30 +181,89 @@ namespace heist
                 }
             }
 
-            decimal courage;
+            int take;
             while (true)
             {
-                Console.Write("Courage factor (.0 - 2.0): ");
-                string courageInput = Console.ReadLine();
-                bool courageSuccess = decimal.TryParse(courageInput, out decimal parsedCourage);
-
-                if (courageSuccess && parsedCourage >= 0 && parsedCourage <= 2)
+                Console.Write("Take percentage: ");
+                string takeInput = Console.ReadLine();
+                Console.WriteLine("");
+                bool takeSuccess = int.TryParse(takeInput, out int parsedTake);
+                if (takeSuccess && parsedTake > 0 && parsedTake <= 100)
                 {
-                    courage = parsedCourage;
+                    take = parsedTake;
                     break;
                 }
-                else if (courageInput == "")
+                else if (takeInput == "")
                 {
                     Console.WriteLine("You forgot to enter a number!");
                     continue;
                 }
                 else
                 {
-                    Console.WriteLine($"\"{courageInput}\" is not a valid entry");
+                    Console.WriteLine($"\"{takeInput}\" is not a valid entry");
                 }
             }
-            Teammate mate = new Teammate(nameInput, skill, courage);
+
+            Specialist mate = newSpecialist(specialtyNum, nameInput, skill, take);
+
             return mate;
+        }
+
+        // Method to return user inputted specialty number as it's name string and return specialist
+        public static Specialist newSpecialist(int specialtyNum, string name, int skill, int take)
+        {
+            switch (specialtyNum)
+            {
+                case 1:
+                    return new Hacker(name, "Hacker", skill, take);
+                case 2:
+                    return new Muscle(name, "Muscle", skill, take);
+                case 3:
+                    return new Locksmith(name, "Locksmith", skill, take);
+                default:
+                    return new Specialist(name, "No Specialty", skill, take);
+            }
+        }
+
+        // Method to return a robber by user selection
+        public static IRobber selectRobber(List<IRobber> rolodex, Team crew)
+        {
+            // Display only the robbers that the user has budget for.
+            List<IRobber> availableRobbers = (from r in rolodex
+                                              where r.PercentageCut + crew.PercentageTotal < 100
+                                              select r).ToList();
+            printRoster(availableRobbers);
+            int selectionNum;
+            while (true)
+            {
+                Console.WriteLine("Enter ID number of specialist to add: ");
+                string selectionInput = Console.ReadLine();
+                bool selectionSuccess = int.TryParse(selectionInput, out int parsedSelection);
+                if (selectionSuccess && parsedSelection > 0 && parsedSelection <= availableRobbers.Count)
+                {
+                    selectionNum = parsedSelection - 1;
+                    if(crew.Mates.Any(m => m.Specialty == rolodex[selectionNum].Specialty))
+                    {
+                        Console.WriteLine($"You already have a {rolodex[selectionNum].Specialty}!");
+                        continue;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                else if (selectionInput == "")
+                {
+                    Console.WriteLine("You forgot to enter a number!");
+                    continue;
+                }
+                else
+                {
+                    Console.WriteLine($"\"{selectionInput}\" is not a valid entry");
+                    Console.WriteLine($"Enter a number between 1 and {availableRobbers.Count}");
+                }
+            }
+            return rolodex[selectionNum];
         }
 
         public static int askIterations()
@@ -158,26 +292,39 @@ namespace heist
             return trials;
         }
 
-        public static bool robBank(Team myTeam, Bank theBank)
+        public static bool robBank(Team crew, Bank theBank)
         {
-            Console.WriteLine($"\nTotal skill level for team is {myTeam.SkillTotal}");
-            Console.WriteLine($"Your current luck factor results in {myTeam.Luck} to the banks difficulty");
-            Console.WriteLine($"The resulting difficulty level is {theBank.Difficulty + myTeam.Luck}");
+            Console.WriteLine($"Your current luck factor is {crew.Luck}");
+
+            List<bool> systemSuccessList = new List<bool>();
+
+            foreach (IRobber mate in crew.Mates)
+            {
+                systemSuccessList.Add(mate.PerformSkill(theBank, crew.Luck));
+            }
 
             bool success;
-            if (myTeam.SkillTotal > (theBank.Difficulty + myTeam.Luck))
-            {
-                Console.WriteLine("\nThe heist succeeds! You made money, but now the FBI is after you.");
-                success = true;
-            }
-            else
+            if (systemSuccessList.Any(success => success == false))
             {
                 Console.WriteLine("The heist has failed. You and your team have been captured.");
                 success = false;
             }
+            else
+            {
+                Console.WriteLine("The heist succeeds! You made money, but now the FBI is after you.");
+                success = true;
+            }
             return success;
         }
-
+        public static int calculateEarnings(Team crew, Bank theBank)
+        {
+            int earningsTotal = theBank.CashOnHand;
+            foreach (var mate in crew.Mates)
+            {
+                earningsTotal =- theBank.CashOnHand * (mate.PercentageCut / 100);
+            }
+            return earningsTotal;
+        }
         public static bool ask()
         {
             Console.WriteLine("Y or N?");
