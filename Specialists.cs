@@ -41,7 +41,7 @@ namespace heist
         {
             Console.WriteLine($"{Name} is infiltrating the mainframe");
             bank.AlarmScore -= SkillLevel + luck;
-            if (bank.SecurityGuardScore < 0)
+            if (bank.AlarmScore < 0)
             {
                 Console.WriteLine($"{Name} has hacked their system wide open!");
                 return true;

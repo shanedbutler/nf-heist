@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace heist
@@ -63,15 +64,18 @@ namespace heist
 
             int trialRuns = askIterations();
             int successCount = 0;
-            int personalEarnings = 0;
+            double totalEarnings = 0;
             for (int i = 0; i < trialRuns; i++)
             {
                 bool wasSuccess = robBank(crew, theBank);
                 if (wasSuccess)
                 {
                     successCount++;
-                    personalEarnings += calculateEarnings(crew, theBank);
-                    Console.WriteLine($"You made {personalEarnings}!");
+                    double runEarnings = calculateEarnings(crew, theBank);
+                    totalEarnings += runEarnings;
+                    CultureInfo myCIintl = new CultureInfo("en-US", false);
+                    string totalEarningsString = totalEarnings.ToString("C", myCIintl);
+                    Console.WriteLine($"You've made ${totalEarnings} on this run!");
                 }
 
                 //Reset bank and print report for next iteration on all but last iteration
@@ -84,36 +88,38 @@ namespace heist
             }
             if (successCount > (trialRuns / 2))
             {
-                Console.WriteLine("Congratulations!");
+                Console.WriteLine("\nCongratulations!");
             }
             else
             {
-                Console.WriteLine("Sorry!");
+                Console.WriteLine("\nSorry!");
             }
             Console.WriteLine($"Your heist succeeded {successCount} times.");
             Console.WriteLine($"You failed {trialRuns - successCount} times.");
+            Console.WriteLine($"You made a total of {totalEarnings}");
         }
 
+        // METHODS:
         // Create a directory of robbers for the user to choose from
         public static List<IRobber> getPremadeRoster()
         {
             List<IRobber> preList = new List<IRobber>();
-            Hacker netHacker = new Hacker(".NET Developer", "Hacker", 70, 25);
+            Hacker netHacker = new Hacker(".NET Developer", "Hacker", 90, 25);
             preList.Add(netHacker);
 
-            Hacker iotHacker = new Hacker("IoT Wizard", "Hacker", 50, 20);
+            Hacker iotHacker = new Hacker("IoT Wizard", "Hacker", 60, 20);
             preList.Add(iotHacker);
 
-            Muscle fitnessCoach = new Muscle("Fitness Coach", "Muscle", 45, 20);
+            Muscle fitnessCoach = new Muscle("Fitness Coach", "Muscle", 65, 20);
             preList.Add(fitnessCoach);
 
-            Muscle gymRat = new Muscle("Gym Rat", "Muscle", 70, 25);
+            Muscle gymRat = new Muscle("Gym Rat", "Muscle", 90, 25);
             preList.Add(gymRat);
 
-            Locksmith lockSmith = new Locksmith("Mobile Locksmith", "Locksmith", 50, 15);
+            Locksmith lockSmith = new Locksmith("Mobile Locksmith", "Locksmith", 60, 15);
             preList.Add(lockSmith);
 
-            Locksmith safeCracker = new Locksmith("Safecracker", "Locksmith", 70, 40);
+            Locksmith safeCracker = new Locksmith("Safecracker", "Locksmith", 90, 40);
             preList.Add(safeCracker);
 
             return preList;
@@ -321,7 +327,7 @@ namespace heist
             int earningsTotal = theBank.CashOnHand;
             foreach (var mate in crew.Mates)
             {
-                earningsTotal =- theBank.CashOnHand * (mate.PercentageCut / 100);
+                earningsTotal -= theBank.CashOnHand * (mate.PercentageCut / 100);
             }
             return earningsTotal;
         }
